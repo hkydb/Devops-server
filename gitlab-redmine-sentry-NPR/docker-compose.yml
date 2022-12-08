@@ -57,10 +57,85 @@ services:
     - IMAP_SSL=true
     - IMAP_INTERVAL=30
 
-    ports:
-    - "10083:80"
+    #ports:
+    #- "10083:80"
     volumes:
     - /srv/docker/redmine/redmine:/home/redmine/data
+
+  #sentry
+  sentry-redis:
+    image: sameersbn/redis:latest
+    container_name: sentry-redis
+    hostname: sentry-redis
+    restart: always
+    networks:
+      - sentry
+    volumes:
+      - './data/sentry/redis/data:/data'
+  
+  sentry-postgres:
+    image: sameersbn/postgresql:9.6-2
+    container_name: sentry-postgres
+    hostname: sentry-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: sentry
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: sentry
+    networks:
+      - sentry
+    volumes:
+      - './data/sentry/postgres:/var/lib/postgresql/data'
+
+  sentry-base:
+    image: sentry:latest
+    container_name: sentry-base
+    hostname: sentry-base
+    restart: always
+    ports:
+      - '9000:9000'
+    env_file:
+      - .env
+    depends_on:
+      - sentry-redis
+      - sentry-postgres
+    networks:
+      - sentry
+    volumes:
+      - './data/sentry/sentry:/var/lib/sentry/files'
+
+  sentry-cron:
+    image: sentry:latest
+    container_name: sentry-cron
+    hostname: sentry-cron
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - sentry-redis
+      - sentry-postgres
+    command: "sentry run cron"
+    networks:
+      - sentry
+    volumes:
+      - './data/sentry/sentry:/var/lib/sentry/files'
+
+  sentry-worker:
+    image: sentry:latest
+    container_name: sentry-worker
+    hostname: sentry-worker
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - sentry-redis
+      - sentry-postgres
+    command: "sentry run worker"
+    networks:
+      - sentry
+    volumes:
+      - './data/sentry/sentry:/var/lib/sentry/files'
+
 
   #gitlab
   gitlab-redis:
@@ -89,8 +164,8 @@ services:
     - gitlab-redis
     - gitlab-postgresql
     ports:
-    - "10182:80"
-    - "10183:22"
+    #- "10080:80"
+    - "2222:22"
     volumes:
     - /srv/docker/gitlab/gitlab:/home/git/data:Z
     environment:
@@ -211,23 +286,48 @@ services:
     - OAUTH_AZURE_API_SECRET=
     - OAUTH_AZURE_TENANT_ID=
 
-  # jenkins  
-  #jenkins:
-  #  image: jenkins:latest
-  #  restart: always
-  #  environment:
-  #  - JENKINS_OPTS=--prefix=/jenkins
-  #  - JAVA_OPTS=-Duser.timezone=Asia/Shanghai
-  #  volumes:
-  #  - /srv/docker/jenkins/jenkins:/var/jenkins_home
-
   # proxy
-  #proxy:
-  #  build: ./proxy
-  #  image: proxy
-  #  links:
-  #    - gitlab:gitlab
-  #    - redmine:redmine
-  #    - jenkins:jenkins
-  #  ports:
-  #    - "80:80"
+  proxy:
+    build: ./proxy
+    image: proxy
+    links:
+      - gitlab:gitlab
+      - redmine:redmine
+    ports:
+      - "80:80"
+
+  # nexus
+  # nexus:
+  #   image: sonatype/nexus3:3.13.0
+  #   restart: always
+  #   ports:
+  #     - "8081:8081"
+  #     - "8082:8082"
+  #     - "8083:8083"
+  #   volumes:
+  #     - /srv/docker/nexus/nexus-data:/nexus-data:Z
+  #   environment:
+  #     - NEXUS_CONTEXT=nexus
+
+
+
+
+#gitlab-mirrors
+  # gitlab-mirrors:
+  # build: ./docker-gitlab-mirrors
+  # image: gitlab-mirrors
+  # volumes:
+  #   - /srv/docker/gitlab-mirrors/config:/config:Z
+  #   - /srv/docker/gitlab-mirrors/data:/data:Z
+  # depends_on:
+  #   - gitlab-redis
+  #   - gitlab-postgresql
+  # environment:
+  #   - GITLAB_MIRROR_UID=1000
+  #   - GITLAB_MIRROR_GITLAB_USER=user
+  #   - GITLAB_MIRROR_GITLAB_NAMESPACE=group
+  #   - GITLAB_MIRROR_GITLAB_URL=http://host:port/gitlab
+
+networks:
+  sentry:
+    driver: bridge

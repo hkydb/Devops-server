@@ -92,3 +92,10 @@ docker-compose down
 ```
 
 NOTE: All of the collectors, database, API and UI need to be running before you can test the app fully through the UI. If something is not working, check the logs to see if all of the different components are finished being built. After waiting for them to finish, everything should be running properly. 
+
+
+### showdoc
+1. git clone https://github.com/star7th/showdoc.git /srv/docker/showdoc/showdoc
+2. chmod -R 777 /srv/docker/showdoc/showdoc
+3. docker-compose up
+4. done!!!
