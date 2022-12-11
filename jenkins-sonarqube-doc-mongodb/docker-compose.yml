@@ -66,13 +66,13 @@ services:
       - "80:80"
       - "8080:8080"
     environment: 
-      - PROXY_URL=
-      - PROXY_PORT=
-      - PROXY_USERNAME=
-      - PROXY_PASSWORD=
-#      - GITHUB_HOST=github.com
-#      - GITHUB_GRAPHQL_URL=
-#      - GITHUB_BASE_API_URL=
+      - PROXY_URL=  
+      - PROXY_PORT=80
+      - PROXY_USERNAME= 
+      - PROXY_PASSWORD= 
+      - GITHUB_HOST=github.com
+      - GITHUB_GRAPHQL_URL=
+      - GITHUB_BASE_API_URL=
       - GITHUB_CRON=0 1/5 * * * *
        #See https://hygieia.github.io/Hygieia/troubleshoot.html for how to get a personal access token
       - GITHUB_PERSONAL_ACCESS_TOKEN=
@@ -82,8 +82,8 @@ services:
       - SONAR_HOST=http://sonarqube:9000
       - SONAR_VERSION=8.4
       - SONAR_METRICS=ncloc,violations,new_vulnerabilities,critical_violations,major_violations,blocker_violations,tests,test_success_density,test_errors,test_failures,coverage,line_coverage,sqale_index,alert_status,quality_gate_details
-      - SONAR_USERNAME=
-      - SONAR_PASSWORD=
+      - SONAR_USERNAME=hkydb
+      - SONAR_PASSWORD=123456
     privileged: true
 # If you want to view logs locally or have mongo data persisted uncomment out the below. 
     volumes:
